@@ -1,0 +1,22 @@
+{
+  "name": "outlook-token-fetcher",
+  "version": "1.0.0",
+  "description": "This is a service app for ride-share",
+  "keywords": [
+    "access-token",
+    "outlook"
+  ],
+  "license": "ISC",
+  "author": "Raushan Kumar Thakur",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.15.0",
+    "nodemailer": "^6.10.0",
+    "playwright": "^1.51.1"
+  }
+}
