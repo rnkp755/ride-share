@@ -27,10 +27,12 @@ app.use(cookieParser());
 import outlookRouter from "./routes/outlook.route.js";
 import userRouter from "./routes/user.route.js";
 import otpRouter from "./routes/otp.route.js";
+import routeRouter from "./routes/route.route.js";
 // Using routes
 app.use("/api/v1/outlook", outlookRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/otp", otpRouter);
+app.use("/api/v1/route", routeRouter);
 
 connectToMongo()
     .then(() => {
