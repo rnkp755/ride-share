@@ -1,5 +1,5 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import { APIError } from "../utils/apiError.js";
+import { APIError } from "../utils/APIError.js";
 import { APIResponse } from "../utils/APIResponse.js";
 import { Key } from "../models/key.model.js";
 import axios from "axios";
@@ -30,12 +30,14 @@ const getNameFromOutlook = async (email) => {
                 },
             }
         );
-
         if (
             response.status !== 200 ||
             !response.data.Groups[0]?.Suggestions[0]?.DisplayName
         ) {
-            throw new APIError(500, "Error fetching data from Outlook API");
+            throw new APIError(
+                response.status || 500,
+                "Error fetching data from Outlook API"
+            );
         }
         return response.data.Groups[0].Suggestions[0].DisplayName;
     } catch (error) {

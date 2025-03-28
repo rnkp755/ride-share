@@ -45,10 +45,6 @@ const userSchema = new Schema(
             type: Boolean,
             default: false,
         },
-        allowPasswordReset: {
-            type: Boolean,
-            default: false,
-        },
     },
     { timestamps: true }
 );
@@ -68,7 +64,7 @@ userSchema.methods.generateAccessToken = async function () {
     return jwt.sign(
         {
             _id: this._id,
-            fullName: this.firstName + " " + this.lastName,
+            email: this.email,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

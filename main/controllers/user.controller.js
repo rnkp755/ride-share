@@ -119,9 +119,10 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     const user = await User.findOne({ email }).select(
-        "-password -__v -createdAt -updatedAt"
+        "-__v -createdAt -updatedAt -allowPasswordReset"
     );
-    if (!user) throw new APIError(404, "User doesn't exist");
+    if (!user || !user.isVerified)
+        throw new APIError(404, "User doesn't exist or not verified");
 
     const isPasswordValid = await user.isPasswordcorrect(password);
 
@@ -154,7 +155,6 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-    console.log("Logout ", req.user._id);
     const user = await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -201,9 +201,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         throw new APIError(401, "Refesh Token Invalid or Expired");
 
     try {
-        const { newAccessToken, newRefreshToken } =
+        const { accessToken, refreshToken } =
             await generateAccessAndRefreshTokens(user._id);
-        console.log("New Access Token", newAccessToken);
 
         const options = {
             httpOnly: true,
@@ -212,8 +211,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
         return res
             .status(200)
-            .cookie("accessToken", newAccessToken, options)
-            .cookie("refreshToken", newRefreshToken, options)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
             .json(
                 new APIResponse(
                     200,
@@ -221,8 +220,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
                         email: user.email,
                         name: user.name,
                         avatar: user.avatar,
-                        accessToken: newAccessToken,
-                        refreshToken: newRefreshToken,
+                        accessToken: accessToken,
+                        refreshToken: refreshToken,
                     },
                     "Session restored Successfully"
                 )
@@ -233,36 +232,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             error?.message || "Error while restarting session"
         );
     }
-});
-
-const resetPassword = asyncHandler(async (req, res) => {
-    const { email, newPassword } = req.body;
-
-    if (!email) {
-        throw new APIError(400, "Email is required");
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-        throw new APIError(400, "User doesn't exist");
-    }
-    if (
-        !user.allowPasswordReset ||
-        new Date() > new Date(user.updatedAt.getTime() + 5 * 60 * 1000)
-    ) {
-        throw new APIError(
-            400,
-            "Password reset is not allowed. Reset Session maybe expired."
-        );
-    }
-
-    user.password = newPassword;
-    user.allowPasswordReset = false;
-    await user.save({ validateBeforeSave: true });
-
-    return res
-        .status(200)
-        .json(new APIResponse(200, {}, "Password Updated Successfully"));
 });
 
 const changeUserPassword = asyncHandler(async (req, res) => {
@@ -306,7 +275,7 @@ const updateAvatar = asyncHandler(async (req, res) => {
     const avatar = req.file?.path;
     if (!avatar) throw new APIError(400, "Please provide an avatar");
 
-    const response = await uploadOnCloudinary(file.path);
+    const response = await uploadOnCloudinary(avatar);
     if (!response) {
         throw new APIError(500, "Failed to upload images");
     }
@@ -337,7 +306,6 @@ export {
     loginUser,
     logoutUser,
     refreshAccessToken,
-    resetPassword,
     changeUserPassword,
     getUserProfile,
     updateAvatar,

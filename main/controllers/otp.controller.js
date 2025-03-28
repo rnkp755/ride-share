@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { OTP } from "../models/otp.model.js";
 import { User } from "../models/user.model.js";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { APIError } from "../utils/APIError.js";
 import { APIResponse } from "../utils/APIResponse.js";
 import { sendOTPMail } from "../utils/sendMail.js";
@@ -37,7 +38,7 @@ const sendOTP = asyncHandler(async (req, res) => {
 
 // Verify OTP and proceed
 const verifyOTP = asyncHandler(async (req, res) => {
-    const { email, otp } = req.body;
+    const { email, otp, newPassword } = req.body;
     const { reason } = req.params;
 
     if (!email || !otp) throw new APIError(400, "Email & OTP is required");
@@ -75,11 +76,15 @@ const verifyOTP = asyncHandler(async (req, res) => {
                 )
             );
     } else if (reason === "reset-password") {
+        if (!newPassword) {
+            throw new APIError(400, "New password is required");
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 8);
         const user = await User.findOneAndUpdate(
             { email },
-            { allowPasswordReset: true },
+            { password: hashedPassword },
             { new: true }
-        );
+        ).select("-password -__v -createdAt -updatedAt -refreshToken");
         if (!user) {
             throw new APIError(400, "User doesn't exist");
         }
@@ -89,8 +94,8 @@ const verifyOTP = asyncHandler(async (req, res) => {
             .json(
                 new APIResponse(
                     200,
-                    {},
-                    "OTP verified, Please change password within 5 minutes"
+                    user,
+                    "Password Updated successfully. Please login again"
                 )
             );
     }
