@@ -6,6 +6,7 @@ import {
     refreshAccessToken,
     changeUserPassword,
     updateAvatar,
+    updateUserSettings,
     getUserProfile,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -22,6 +23,7 @@ userRouter.route("/change-password").post(verifyJWT, changeUserPassword);
 userRouter
     .route("/update-avatar")
     .patch(verifyJWT, upload.single("avatar"), updateAvatar);
+userRouter.route("/update-settings").patch(verifyJWT, updateUserSettings);
 userRouter.route("/").get(verifyJWT, getUserProfile);
 
 export default userRouter;

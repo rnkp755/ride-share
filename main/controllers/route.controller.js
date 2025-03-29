@@ -36,7 +36,19 @@ const addRoute = asyncHandler(async (req, res) => {
     }
 
     const newRoute = await handleAddViaInRoute(src.trim(), dest.trim(), via);
-    res.status(201).json(new APIResponse(201, newRoute, "Route added successfully"));
+    return res.status(201).json(new APIResponse(201, newRoute, "Route added successfully"));
 });
 
-export {addRoute};
+const searchRoutes = asyncHandler(async (req, res) => {
+    const { src, dest } = req.query;
+
+    let query = {};
+    if (src) query.src = new RegExp(`^${src}`, "i"); // Case-insensitive prefix match
+    if (dest) query.dest = new RegExp(`^${dest}`, "i");
+
+    const routes = await Route.find(query).select("-createdAt -updatedAt -__v");
+
+    return res.status(200).json(new APIResponse(200, routes, "Routes fetched successfully"));
+});
+
+export {addRoute, searchRoutes};

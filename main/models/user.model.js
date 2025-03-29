@@ -45,6 +45,19 @@ const userSchema = new Schema(
             type: Boolean,
             default: false,
         },
+        settings: {
+            type: new Schema(
+                {
+                    postVisibility: {
+                        type: String,
+                        enum: ["all", "female-only", "employee-only"],
+                        default: "all",
+                    },
+                },
+                { _id: false } // Prevents _id creation for the subdocument
+            ),
+            default: { postVisibility: "all" },
+        },
     },
     { timestamps: true }
 );

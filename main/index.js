@@ -28,11 +28,13 @@ import outlookRouter from "./routes/outlook.route.js";
 import userRouter from "./routes/user.route.js";
 import otpRouter from "./routes/otp.route.js";
 import routeRouter from "./routes/route.route.js";
+import postRouter from "./routes/post.route.js";
 // Using routes
 app.use("/api/v1/outlook", outlookRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/otp", otpRouter);
 app.use("/api/v1/route", routeRouter);
+app.use("/api/v1/post", postRouter);
 
 connectToMongo()
     .then(() => {
