@@ -25,23 +25,28 @@ const getNameFromOutlook = async (email) => {
             outlookAPIBodyGenerator(email),
             {
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessToken}c`,
                     "Content-Type": "application/json",
                 },
             }
         );
-        if (
-            response.status !== 200 ||
-            !response.data.Groups[0]?.Suggestions[0]?.DisplayName
-        ) {
-            throw new APIError(
-                response.status || 500,
-                "Error fetching data from Outlook API"
-            );
+
+        // No suggestions found
+        if (response.data.Groups?.length === 0) {
+            return {
+                status: 404,
+                name: null,
+            };
         }
-        return response.data.Groups[0].Suggestions[0].DisplayName;
+        return {
+            status: response.status,
+            name: response.data.Groups[0].Suggestions[0].DisplayName,
+        };
     } catch (error) {
-        throw new APIError(500, "Error fetching data from Outlook API");
+        return {
+            status: error.response?.status || 500,
+            name: null,
+        };
     }
 };
 
@@ -50,14 +55,17 @@ const getName = asyncHandler(async (req, res) => {
     if (!email) {
         throw new APIError(404, "Email is required");
     }
-    const name = await getNameFromOutlook(email);
-    if (!name) {
-        throw new APIError(404, "Name not found");
-    }
+    const { status, name } = await getNameFromOutlook(email);
 
     return res
-        .status(200)
-        .json(new APIResponse(200, { name }, "Name fetched successfully"));
+        .status(status)
+        .json(
+            new APIResponse(
+                status,
+                { name },
+                `${status == 200 ? "Success" : "Error"}`
+            )
+        );
 });
 
 export { getName, getNameFromOutlook };

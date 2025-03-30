@@ -52,7 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const name =
-        (await getNameFromOutlook(email.trim().toLowerCase())) ||
+        (await getNameFromOutlook(email.trim().toLowerCase())).name ||
         getTempName(email.trim());
     let user;
     if (existedUser) {
@@ -307,16 +307,26 @@ const updateUserSettings = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user?._id).select(
         "-password -refreshToken -__v -createdAt -updatedAt"
     );
-    if(!user) {
+    if (!user) {
         throw new APIError(404, "User not found");
     }
 
-    if(user.role !== "employee" && postVisibility === "employee-only") {
-        throw new APIError(400, "You are not allowed to set post visibility to employee-only");
+    if (user.role !== "employee" && postVisibility === "employee-only") {
+        throw new APIError(
+            400,
+            "You are not allowed to set post visibility to employee-only"
+        );
     } else if (user.gender !== "female" && postVisibility === "female-only") {
-        throw new APIError(400, "You are not allowed to set post visibility to female-only");
+        throw new APIError(
+            400,
+            "You are not allowed to set post visibility to female-only"
+        );
     } else if (user.settings.postVisibility === postVisibility) {
-        return res.status(200).json(new APIResponse(200, user, "User settings updated successfully"));
+        return res
+            .status(200)
+            .json(
+                new APIResponse(200, user, "User settings updated successfully")
+            );
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -338,7 +348,13 @@ const updateUserSettings = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new APIResponse(200, updatedUser, "User settings updated successfully"));
+        .json(
+            new APIResponse(
+                200,
+                updatedUser,
+                "User settings updated successfully"
+            )
+        );
 });
 
 export {
