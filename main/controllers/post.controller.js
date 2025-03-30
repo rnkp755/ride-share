@@ -6,7 +6,16 @@ import { Route } from "../models/route.model.js";
 import { User } from "../models/user.model.js";
 
 const createPost = asyncHandler(async (req, res) => {
-    const { src, dest, via, tripDate, tripTime, transportation, notes, visibleTo } = req.body;
+    const {
+        src,
+        dest,
+        via,
+        tripDate,
+        tripTime,
+        transportation,
+        notes,
+        visibleTo,
+    } = req.body;
     const userId = req.user?._id;
 
     if (!src || !dest || !via || !tripDate || !tripTime || !transportation) {
@@ -30,7 +39,9 @@ const createPost = asyncHandler(async (req, res) => {
         visibleTo: visibleTo || user.settings.postVisibility,
     });
 
-    return res.status(201).json(new APIResponse(201, post, "Post created successfully"));
+    return res
+        .status(201)
+        .json(new APIResponse(201, post, "Post created successfully"));
 });
 
 const deletePost = asyncHandler(async (req, res) => {
@@ -39,14 +50,20 @@ const deletePost = asyncHandler(async (req, res) => {
 
     const post = await Post.findOneAndDelete({ _id: postId, userId });
     if (!post) {
-        throw new APIError(404, "Post not found or you do not have permission to delete it.");
+        throw new APIError(
+            404,
+            "Post not found or you do not have permission to delete it."
+        );
     }
 
-    return res.status(200).json(new APIResponse(200, null, "Post deleted successfully"));
+    return res
+        .status(200)
+        .json(new APIResponse(200, null, "Post deleted successfully"));
 });
 
 const getPosts = asyncHandler(async (req, res) => {
     const {
+        postedBy,
         src,
         dest,
         transportation,
@@ -63,7 +80,18 @@ const getPosts = asyncHandler(async (req, res) => {
         throw new APIError(400, "Invalid page or limit parameters");
     }
 
-    let query = { userId };
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new APIError(404, "User not found.");
+    }
+
+    let allowedVisibleTo = ["all"];
+    if (user.role === "employee") allowedVisibleTo.push("employee-only");
+    if (user.gender === "female") allowedVisibleTo.push("female-only");
+
+    let query = { visibleTo: { $in: allowedVisibleTo } };
+    if (postedBy) query.userId = postedBy;
+    else query.userId = { $ne: userId }; // Exclude user's own posts
     if (src) query.src = new RegExp(`^${src}`, "i");
     if (dest) query.dest = new RegExp(`^${dest}`, "i");
     if (transportation) query.transportation = transportation;
@@ -94,5 +122,4 @@ const getPosts = asyncHandler(async (req, res) => {
         );
 });
 
-
-export {createPost, deletePost, getPosts};
+export { createPost, deletePost, getPosts };
