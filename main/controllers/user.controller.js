@@ -45,6 +45,17 @@ const registerUser = asyncHandler(async (req, res) => {
     ) {
         throw new APIError(400, "Please provide all the required fields");
     }
+    if (
+        password.length < 8 ||
+        !/\d/.test(password) ||
+        !/[a-zA-Z]/.test(password) ||
+        !/[!@#$%^&*]/.test(password)
+    ) {
+        throw new APIError(
+            400,
+            "Password must be between 8 to 16 characters and include at least one letter, one number, and one special character"
+        );
+    }
 
     const existedUser = await User.findOne({ email });
     if (existedUser && existedUser.isVerified) {

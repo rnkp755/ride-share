@@ -25,7 +25,7 @@ const getNameFromOutlook = async (email) => {
             outlookAPIBodyGenerator(email),
             {
                 headers: {
-                    Authorization: `Bearer ${accessToken}c`,
+                    Authorization: `Bearer ${accessToken}`,
                     "Content-Type": "application/json",
                 },
             }

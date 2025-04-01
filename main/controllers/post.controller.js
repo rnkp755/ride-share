@@ -106,7 +106,7 @@ const getPosts = asyncHandler(async (req, res) => {
 
     const [posts, totalPosts] = await Promise.all([
         Post.find(query, null, options)
-            .populate("userId", "-password -isVerified -settings -refreshToken")
+            .populate("userId", "-password -isVerified -settings -refreshToken -createdAt -updatedAt -__v")
             .select("-createdAt -updatedAt -__v"),
         Post.countDocuments(query),
     ]);
