@@ -16,7 +16,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 	try {
 		if (!localFilePath) return null;
 		const response = await cloudinary.uploader.upload(localFilePath, {
-			folder: "insuline-dev",
+			folder: "ride-share",
 			resource_type: "auto",
 		});
 		console.log(
