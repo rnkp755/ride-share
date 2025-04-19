@@ -26,6 +26,6 @@ userRouter
 	.patch(verifyJWT, upload.single("avatar"), updateAvatar);
 userRouter.route("/update-settings").patch(verifyJWT, updateUserSettings);
 userRouter.route("/me").get(verifyJWT, getUserProfile);
-userRouter.route("/:id").get(getUserPublicProfile);
+userRouter.route("/:id").get(verifyJWT, getUserPublicProfile);
 
 export default userRouter;
