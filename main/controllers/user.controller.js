@@ -282,6 +282,24 @@ const getUserProfile = asyncHandler(async (req, res) => {
 		.json(new APIResponse(200, user, "User Profile fetched successfully"));
 });
 
+const getUserPublicProfile = asyncHandler(async (req, res) => {
+	const user = await User.findById(req.params?.id).select(
+		"name email gender avatar role"
+	);
+	if (!user) {
+		throw new APIError(404, "User not found");
+	}
+	return res
+		.status(200)
+		.json(
+			new APIResponse(
+				200,
+				user,
+				"User Public Profile fetched successfully"
+			)
+		);
+});
+
 const updateAvatar = asyncHandler(async (req, res) => {
 	const avatar = req.file?.path;
 	if (!avatar) throw new APIError(400, "Please provide an avatar");
@@ -375,6 +393,7 @@ export {
 	refreshAccessToken,
 	changeUserPassword,
 	getUserProfile,
+	getUserPublicProfile,
 	updateAvatar,
 	updateUserSettings,
 	generateAccessAndRefreshTokens,
