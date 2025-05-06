@@ -94,7 +94,7 @@ const getPosts = asyncHandler(async (req, res) => {
 		tripDate,
 		tripTime,
 		page = 1,
-		limit = 2,
+		limit = 10,
 		sortBy = "createdAt",
 		sortType = "desc",
 	} = req.query;
@@ -158,10 +158,12 @@ const getPosts = asyncHandler(async (req, res) => {
 
 	// Step 3: Calculate the total count of the filtered posts
 	const totalPosts = posts.length;
+	console.log("Total posts after fuzzy filtering:", totalPosts);
 
 	// Step 4: Paginate the results after fuzzy filtering
 	const paginatedPosts = posts.slice(
-		(options.skip, options.skip + options.limit)
+		options.skip,
+		options.skip + options.limit
 	);
 
 	// Hash emails directly in the populated documents

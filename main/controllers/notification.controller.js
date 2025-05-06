@@ -41,6 +41,7 @@ const triggerNewMessageNotification = async (
 			notification: {
 				title: title,
 				body: body,
+				imageUrl: senderAvatar || undefined,
 			},
 			data: {
 				reason: `New Message from ${senderName.split(" ")[0]}`,
@@ -49,8 +50,8 @@ const triggerNewMessageNotification = async (
 				senderName: senderName,
 				senderAvatar: senderAvatar || "",
 				// For Expo, we use route names and params
-				screen: `messages/${fromUserId}`,
-				params: JSON.stringify({
+				route: `messages/${fromUserId}`,
+				additionalParams: JSON.stringify({
 					userId: fromUserId.toString(),
 					name: senderName,
 					avatar: senderAvatar || "",
@@ -98,16 +99,16 @@ const sendNotification = asyncHandler(async (req, res) => {
 	if (!toUserId || !title || !body) {
 		throw new APIError(400, "All fields are required.");
 	}
+
 	if (!fromUserId || !reason || !NOTIFICATION_REASONS.includes(reason)) {
 		throw new APIError(401, "Unauthorized or invalid request.");
 	}
 
-	const fromUser = await User.findById(fromUserId).select(
-		"name avatar fcmToken"
-	);
+	const fromUser = await User.findById(fromUserId).select("name avatar");
+	const toUser = await User.findById(toUserId).select("fcmToken");
 
-	if (!fromUser || !fromUser.fcmToken) {
-		throw new APIError(404, "User not found or FCM token missing.");
+	if (!fromUser || !toUser) {
+		throw new APIError(404, "User not found");
 	}
 	try {
 		if (reason === "message") {
@@ -118,7 +119,7 @@ const sendNotification = asyncHandler(async (req, res) => {
 				body,
 				fromUser.name,
 				fromUser.avatar,
-				fromUser.fcmToken
+				toUser.fcmToken
 			);
 		}
 
