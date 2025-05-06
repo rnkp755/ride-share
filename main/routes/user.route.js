@@ -7,6 +7,7 @@ import {
 	changeUserPassword,
 	updateAvatar,
 	updateUserSettings,
+	updateFCMToken,
 	getUserProfile,
 	getUserPublicProfile,
 } from "../controllers/user.controller.js";
@@ -25,6 +26,7 @@ userRouter
 	.route("/update-avatar")
 	.patch(verifyJWT, upload.single("avatar"), updateAvatar);
 userRouter.route("/update-settings").patch(verifyJWT, updateUserSettings);
+userRouter.route("/update-fcm-token").patch(verifyJWT, updateFCMToken);
 userRouter.route("/me").get(verifyJWT, getUserProfile);
 userRouter.route("/:id").get(verifyJWT, getUserPublicProfile);
 

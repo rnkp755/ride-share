@@ -4,6 +4,7 @@ import { APIResponse } from "../utils/APIResponse.js";
 import { Post } from "../models/post.model.js";
 import { Route } from "../models/route.model.js";
 import { User } from "../models/user.model.js";
+import Fuse from "fuse.js";
 
 const hashEmail = (email) => {
 	// Check if the email ends with '@cumail.in'
@@ -115,8 +116,6 @@ const getPosts = asyncHandler(async (req, res) => {
 	let query = { visibleTo: { $in: allowedVisibleTo } };
 	if (postedBy) query.userId = postedBy;
 	else query.userId = { $ne: userId }; // Exclude user's own posts
-	if (src) query.src = new RegExp(`^${src}`, "i");
-	if (dest) query.dest = new RegExp(`^${dest}`, "i");
 	if (transportation) query.transportation = transportation;
 	if (tripDate) query.tripDate = tripDate;
 	if (tripTime) query.tripTime = tripTime;
@@ -127,32 +126,58 @@ const getPosts = asyncHandler(async (req, res) => {
 		sort: { [sortBy]: sortType === "asc" ? 1 : -1 },
 	};
 
-	let [posts, totalPosts] = await Promise.all([
-		Post.find(query, null, options)
-			.populate({
-				path: "userId",
-				select: "-password -isVerified -settings -refreshToken -createdAt -updatedAt -__v",
-				options: { lean: true }, // Use lean for faster plain object retrieval
-			})
-			.select("-updatedAt -__v")
-			.lean() // Ensure posts are plain objects for easier manipulation
-			.exec(),
-		Post.countDocuments(query),
-	]);
+	// Step 1: Fetch all posts based on the basic query
+	let posts = await Post.find(query, null, options)
+		.populate({
+			path: "userId",
+			select: "-password -isVerified -settings -refreshToken -createdAt -updatedAt -__v",
+			options: { lean: true }, // Use lean for faster plain object retrieval
+		})
+		.select("-updatedAt -__v")
+		.lean() // Ensure posts are plain objects for easier manipulation
+		.exec();
+
+	// Step 2: Apply Fuse.js for fuzzy search on `src` and `dest` fields
+	const fuseOptions = {
+		includeScore: true,
+		keys: ["src", "dest"],
+	};
+
+	const fuse = new Fuse(posts, fuseOptions);
+
+	// Fuzzy search on 'src' and 'dest' if the user has provided values
+	if (src) {
+		// Filter posts based on fuzzy matching on 'src'
+		posts = fuse.search(src).map((result) => result.item);
+	}
+
+	if (dest) {
+		// Filter posts based on fuzzy matching on 'dest'
+		posts = fuse.search(dest).map((result) => result.item);
+	}
+
+	// Step 3: Calculate the total count of the filtered posts
+	const totalPosts = posts.length;
+
+	// Step 4: Paginate the results after fuzzy filtering
+	const paginatedPosts = posts.slice(
+		(options.skip, options.skip + options.limit)
+	);
 
 	// Hash emails directly in the populated documents
-	posts.forEach((post) => {
+	paginatedPosts.forEach((post) => {
 		if (post.userId && post.userId.email) {
 			post.userId.email = hashEmail(post.userId.email);
 		}
 	});
 
+	// Return the paginated and fuzzy-matched results
 	return res
 		.status(200)
 		.json(
 			new APIResponse(
 				200,
-				{ posts, totalPosts },
+				{ posts: paginatedPosts, totalPosts },
 				"Posts fetched successfully"
 			)
 		);

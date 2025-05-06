@@ -386,6 +386,29 @@ const updateUserSettings = asyncHandler(async (req, res) => {
 		);
 });
 
+const updateFCMToken = asyncHandler(async (req, res) => {
+	console.log("Requet came here");
+	const { fcmToken } = req.body;
+	if (!fcmToken) throw new APIError(400, "Please provide an FCM token");
+	const user = await User.findByIdAndUpdate(
+		req.user?._id,
+		{
+			fcmToken,
+		},
+		{
+			new: true,
+			runValidators: true,
+		}
+	).select("-password -refreshToken -__v -createdAt -updatedAt");
+	if (!user) {
+		throw new APIError(404, "User not found");
+	}
+
+	return res
+		.status(200)
+		.json(new APIResponse(200, {}, "FCM token updated successfully"));
+});
+
 export {
 	registerUser,
 	loginUser,
@@ -396,5 +419,6 @@ export {
 	getUserPublicProfile,
 	updateAvatar,
 	updateUserSettings,
+	updateFCMToken,
 	generateAccessAndRefreshTokens,
 };
