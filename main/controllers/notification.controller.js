@@ -27,13 +27,13 @@ const triggerNewMessageNotification = async (
 	senderAvatar,
 	fcmToken
 ) => {
+	console.log(`Sending notification to ${toUserId} (${fcmToken})`);
 	try {
 		// Check if FCM token is provided
 		if (!fcmToken) {
 			console.log(`No FCM token provided for user ${toUserId}`);
 			return;
 		}
-
 		// For React Native/Expo specifically, we want to use proper navigation params
 		// instead of using click_action
 		const message = {
@@ -109,7 +109,6 @@ const sendNotification = asyncHandler(async (req, res) => {
 	if (!fromUser || !fromUser.fcmToken) {
 		throw new APIError(404, "User not found or FCM token missing.");
 	}
-
 	try {
 		if (reason === "message") {
 			await triggerNewMessageNotification(
@@ -119,7 +118,7 @@ const sendNotification = asyncHandler(async (req, res) => {
 				body,
 				fromUser.name,
 				fromUser.avatar,
-				fcmToken
+				fromUser.fcmToken
 			);
 		}
 
@@ -129,7 +128,7 @@ const sendNotification = asyncHandler(async (req, res) => {
 				new APIResponse(200, {}, "Notification triggered successfully.")
 			);
 	} catch (error) {
-		throw new APIError(500, "Failed to send notification", error);
+		throw new APIError(500, "Failed to send notification yr", error);
 	}
 });
 

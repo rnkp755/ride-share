@@ -6,6 +6,6 @@ const notificationRouter = Router();
 
 // reason: ["message", "promotion", "alert"]
 
-notificationRouter.route("/send/:reason").post(verifyJWT, sendNotification);
+notificationRouter.route("/:reason").post(verifyJWT, sendNotification);
 
 export default notificationRouter;
