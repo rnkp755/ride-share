@@ -185,4 +185,4 @@ const getPosts = asyncHandler(async (req, res) => {
 		);
 });
 
-export { createPost, deletePost, getPosts };
+export { createPost, deletePost, getPosts, hashEmail };

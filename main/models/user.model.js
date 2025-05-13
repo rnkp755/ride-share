@@ -62,6 +62,10 @@ const userSchema = new Schema(
 			),
 			default: { postVisibility: "all" },
 		},
+		tripsPosted: {
+			type: Number,
+			default: 0,
+		},
 	},
 	{ timestamps: true }
 );

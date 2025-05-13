@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { getNameFromOutlook } from "./outlook.controller.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
+import { hashEmail } from "./post.controller.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
 	try {
@@ -284,10 +285,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
 const getUserPublicProfile = asyncHandler(async (req, res) => {
 	const user = await User.findById(req.params?.id).select(
-		"name email gender avatar role"
+		"_id name email gender avatar role tripsPosted"
 	);
 	if (!user) {
 		throw new APIError(404, "User not found");
+	}
+	if (req.user?._id.toString() !== req.params?.id) {
+		user.email = hashEmail(user.email);
 	}
 	return res
 		.status(200)
